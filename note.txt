@@ -1,0 +1,15 @@
+In order to be able to use docker with the testing python script, I had to change the url to:
+url = 'http://host.docker.internal:4723/wd/hub'
+The line below (line 17) has the correct url (if you're running the script without docker).
+
+I've used appium-desktop-setup-1.10.0 for this assignment.
+
+A video that shows the whole testing process was attached with the submittion message (in case it was needed).
+
+SETUP:
+- run the appium server
+- if using bot dockerfile, change the env section to the bots token
+- run the bot script
+- open android studio and run the android emulator
+- go to the bot testing script, and change the `deviceName` in the capabilities dictionary if needed (to the name of your device)
+- run the bot testing script
