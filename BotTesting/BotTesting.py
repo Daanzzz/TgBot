@@ -13,6 +13,7 @@ cap:Dict[str, Any]={
   "fullReset": False,
   "noReset": True
 }
+
 url = 'http://host.docker.internal:4723/wd/hub'
 #url = 'http://localhost:4723/wd/hub'
 
@@ -34,6 +35,7 @@ MESSAGE_TEXTBOX_XPATH = '/hierarchy/android.widget.FrameLayout/android.widget.Li
 SEND_BUTTON_XPATH = '//android.view.View[@content-desc="Send"]'
 SEARCH_BUTTON_XPATH = '//android.widget.ImageButton[@content-desc="Search"]/android.widget.ImageView'
 BOT_ON_SEARCH_XPATH = '/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout[4]/android.widget.FrameLayout/android.widget.FrameLayout[2]/android.widget.FrameLayout/androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[1]'
+VIEWGROUP_XPATH = '/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout[3]/android.widget.FrameLayout/androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup'
 
 def assure_button_click(button_xpath: str):
   """
@@ -51,6 +53,28 @@ def assure_button_click(button_xpath: str):
       return found_element
     except:
       continue
+
+def get_reply():
+  """
+  get_reply function is responsible for reading text
+  reply from the bot after tests, parse the text, and
+  print the result. It gets the last message in the chat and analyzes it.
+  """
+
+  # find all elements under viewgroup
+  elements = driver.find_elements(By.XPATH ,VIEWGROUP_XPATH)
+
+  # get the last message
+  last_message = elements[-1].text
+  start_pos = last_message.find(': ') + 2
+  end_pos = last_message.find(' Received at')
+  extracted_message = last_message[start_pos:end_pos]
+
+  # checking if the test was a success or not
+  if "MD5" in last_message:
+    print(f"Bot reply [SUCCESS] : {extracted_message}")
+  else:
+    print(f"Bot reply [FAIL] : {extracted_message}")
 
 def send_photo(photo_xpath: str):
   """
@@ -91,7 +115,7 @@ def start_bot_chat():
   the bot on telegram.
   """
 
-  BOT_NAME = "IdansHWBot"
+  BOT_NAME = "IdanTestingBot"
 
   driver.find_element(By.XPATH, SEARCH_BUTTON_XPATH).click()
   time.sleep(0.5)
@@ -120,6 +144,7 @@ def start_bot_chat():
 
   time.sleep(0.5)
 
+
 def send_text_messages():
   """
   send_text_messages function is the last test
@@ -130,28 +155,49 @@ def send_text_messages():
   SECOND_TEST_MESSAGE = "Test number 2"
 
   # locating the textbox element and sending the messages
+  print("Sending first text...")
   textbox_element = assure_button_click(MESSAGE_TEXTBOX_XPATH)
 
   textbox_element.send_keys(FIRST_TEST_MESSAGE)
   assure_button_click(SEND_BUTTON_XPATH).click()
   time.sleep(0.5)
+  get_reply()
+  time.sleep(0.5)
 
+  print("Sending second text...")
   textbox_element.send_keys(SECOND_TEST_MESSAGE)
   assure_button_click(SEND_BUTTON_XPATH).click()
+  time.sleep(0.5)
+  get_reply()
   time.sleep(0.5)
 
 def main():
   try:
     # Entering the chat with the bot
+    print("Initializing bot chat...")
     start_bot_chat()
     time.sleep(0.5)
 
     # Sending the photos - first the PNG, then JPG
+    print("""\n##################
+FILE SENDING TESTS
+##################""")
+    print("Sending PNG photo...")
     send_photo(PNG_TEST_XPATH)
+    get_reply()
+
     time.sleep(0.5)
+
+    print("Sending JPG photo...")
     send_photo(JPG_TEST_XPATH)
+    get_reply()
+
+    time.sleep(0.5)
 
     # Sending text messages
+    print("""\n##################
+TEXT SENDING TESTS
+##################""")
     send_text_messages()
 
     time.sleep(6)
